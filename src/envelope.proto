@@ -1,0 +1,5 @@
+message Envelope
+{
+   optional int32 timestamp=1;
+   optional string ticker=2;
+}

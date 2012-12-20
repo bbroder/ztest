@@ -1,0 +1,58 @@
+#include "zmq.hpp"
+#include <string>
+#include <iostream>
+#include "envelope.pb.h"
+#include "bondquote.pb.h"
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int main ()
+{
+    srand (time(NULL));
+    //  Prepare our context and socket
+    zmq::context_t context (1);
+    zmq::socket_t socket (context, ZMQ_REQ);
+
+    std::cout << "Connecting to hello world server…" << std::endl;
+    socket.connect ("tcp://localhost:5555");
+
+    //  Do 10 requests, waiting each time for a response
+    for (int request_nbr = 1; request_nbr != 1001; request_nbr++) {
+        Envelope env;
+        env.set_ticker ("BOBZ");
+        env.set_timestamp (rand() % 100);
+
+        std::string envs;
+        env.SerializeToString (&envs);
+
+        zmq::message_t request (envs.size());
+        memcpy ((void *) request.data (), (void *) envs.data(), envs.size());
+        socket.send (request);
+
+        //  Get the reply.
+        zmq::message_t reply;
+        socket.recv (&reply);
+//        std::cout << "Received World " << request_nbr << std::endl;
+
+        BondQuote bqm;
+        bqm.set_ask (rand() % 100);
+        bqm.set_bid (rand() % 100);
+        bqm.set_mid (rand() % 100);
+        bqm.set_cusip ("18ZH41");
+
+        std::string bqms;
+        bqm.SerializeToString (&bqms);
+
+        zmq::message_t request2 (bqms.size());
+        memcpy ((void *) request2.data (), (void *) bqms.data(), bqms.size());
+        socket.send (request2);
+
+        //  Get the reply.
+        zmq::message_t reply2;
+        socket.recv (&reply2);
+//        std::cout << "Received World " << request_nbr << std::endl;
+        if (request_nbr % 1000 == 0) fprintf (stdout, "Count: %d\n", request_nbr);
+    }
+    return 0;
+}

@@ -1,0 +1,7 @@
+message BondQuote
+{
+   optional double ask=1;
+   optional double bid=2;
+   optional double mid=3;
+   optional string cusip=4;
+}
